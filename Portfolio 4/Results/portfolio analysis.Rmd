@@ -1,0 +1,378 @@
+---
+title: "portfolio analysis"
+author: "Sarah Hedvig Dahl Nielsen & Liv Tollånes"
+date: "19/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(tidyverse, lme4)
+```
+
+```{r data}
+df <- read_csv("portfolio1.csv")
+```
+## Hypotheses 1 and 2
+```{r Baseline}
+base <- df %>% 
+  filter(
+    intervention == "null"
+  ) %>% select(
+    -c(Y_start, Y_end, A_i_adult, A_i_max, E_remember, I_M, I_F, model_type, share_M_rich, share_F_rich, share_M_power, share_F_power, share_believe_O)
+  ) %>% 
+  rename(
+  run = "[run number]",
+  step = "[step]"
+)
+
+base_long <- gather(base, gender, share_belief, share_believe_M:share_believe_F, factor_key=TRUE) %>% 
+  mutate(gender = ifelse(gender == "share_believe_F", "f", "m"))
+
+
+p1 <- ggplot(base_long, aes(x = year, y = share_belief, color = gender)) + 
+  geom_point() + 
+  theme_minimal() +
+  xlab("Year") + 
+  ylab("Share of population holding a status belief favoring each gender") +
+  ylim(0,1) +
+  facet_wrap(~ run) + 
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+ggsave("hypothesis1.png")
+```
+
+
+## Hypothesis 3
+```{r Baseline}
+### Sorting out data
+base <- df %>% 
+  filter(
+    intervention == "null"
+  ) %>% select(
+    -c(Y_start, Y_end, A_i_adult, A_i_max, E_remember, I_M, I_F, model_type, share_M_rich, share_F_rich, share_M_power, share_F_power, share_believe_O)
+  ) %>% 
+  rename(
+  run = "[run number]",
+  step = "[step]"
+)
+
+base_long <- gather(base, gender, share_belief, share_believe_M:share_believe_F, factor_key=TRUE) %>% 
+  mutate(gender = ifelse(gender == "share_believe_F", "f", "m"))
+
+
+p1 <- ggplot(base_long, aes(x = year, y = share_belief, color = gender)) + 
+  geom_point() + 
+  theme_minimal() +
+  xlab("Year") + 
+  ylab("Share of population holding a status belief favoring each gender") +
+  ylim(0,1) +
+  facet_wrap(~ run) + 
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+#ggsave("baseline.png") 
+# Run number 14 was excluded from further analysis
+
+### Calculating average time point
+base_sum <- base %>% 
+  group_by(run) %>% 
+  filter(share_believe_M < share_believe_F) %>% 
+  filter(
+    run != 14
+  ) %>% select(
+    intervention, run, year
+  )
+
+base_sum <- base_sum %>%
+  group_by(run) %>%
+  mutate(
+    MinYear = min(year, na.rm = T)
+  ) %>%
+  arrange(run) %>% 
+  select(-c(year)) %>% 
+  unique
+
+mean(base_sum$MinYear)
+sd(base_sum$MinYear)
+
+rm(p1, base, base_long)
+```
+
+```{r Intervention 1}
+### Sorting out data
+int1 <- df %>% 
+  filter(
+    intervention == "30/70"
+  ) %>% select(
+    -c(Y_start, Y_end, A_i_adult, A_i_max, E_remember, I_M, I_F, model_type, share_M_rich, share_F_rich, share_M_power, share_F_power, share_believe_O)
+  ) %>% 
+  rename(
+  run = "[run number]",
+  step = "[step]"
+)
+
+int1_long <- gather(int1, gender, share_belief, share_believe_M:share_believe_F, factor_key=TRUE) %>% 
+  mutate(gender = ifelse(gender == "share_believe_F", "f", "m"))
+
+
+p1 <- ggplot(int1_long, aes(x = year, y = share_belief, color = gender)) + 
+  geom_point() + 
+  theme_minimal() +
+  xlab("Year") + 
+  ylab("Share of population holding a status belief favoring each gender") +
+  ylim(0,1) +
+  facet_wrap(~ run) + 
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+#ggsave("intervention1.png") 
+# All runs were kept as they followed the expected pattern
+
+### Calculating average time point
+int1_sum <- int1 %>% 
+  group_by(run) %>% 
+  filter(share_believe_M < share_believe_F) %>% 
+  filter(
+    year > 1940
+  ) %>% select(
+    intervention, run, year
+  )
+
+int1_sum <- int1_sum %>%
+  group_by(run) %>%
+  mutate(
+    MinYear = min(year, na.rm = T)
+  ) %>%
+  arrange(run) %>% 
+  select(-c(year)) %>% 
+  unique()
+
+mean(int1_sum$MinYear)
+sd(int1_sum$MinYear)
+
+rm(int1, int1_long, p1)
+```
+
+```{r intervention 2}
+int2 <- df %>% 
+  filter(
+    intervention == "40/60"
+  ) %>% select(
+    -c(Y_start, Y_end, A_i_adult, A_i_max, E_remember, I_M, I_F, model_type, share_M_rich, share_F_rich, share_M_power, share_F_power, share_believe_O)
+  ) %>% 
+  rename(
+  run = "[run number]",
+  step = "[step]"
+)
+
+int2_long <- gather(int2, gender, share_belief, share_believe_M:share_believe_F, factor_key=TRUE) %>% 
+  mutate(gender = ifelse(gender == "share_believe_F", "f", "m"))
+
+
+p1 <- ggplot(int2_long, aes(x = year, y = share_belief, color = gender)) + 
+  geom_point() + 
+  theme_minimal() +
+  xlab("Year") + 
+  ylab("Share of population holding a status belief favoring each gender") +
+  ylim(0,1) +
+  facet_wrap(~ run) + 
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+#ggsave("intervention2.png") 
+# exclude run no 60 from further analysis
+
+### Calculating average time point
+int2_sum <- int2 %>% 
+  group_by(run) %>% 
+  filter(share_believe_M < share_believe_F) %>% 
+  filter(
+    run != 60,
+    year != 1940
+  ) %>% select(
+    intervention, run, year
+  )
+
+int2_sum <- int2_sum %>%
+  group_by(run) %>%
+  mutate(
+    MinYear = min(year, na.rm = T)
+  ) %>%
+  arrange(run) %>% 
+  select(-c(year)) %>% 
+  unique
+
+mean(int2_sum$MinYear)
+sd(int2_sum$MinYear)
+
+rm(int2, int2_long, p1)
+```
+
+```{r intervention 3}
+int3 <- df %>% 
+  filter(
+    intervention == "50/50"
+  ) %>% select(
+    -c(Y_start, Y_end, A_i_adult, A_i_max, E_remember, I_M, I_F, model_type, share_M_rich, share_F_rich, share_M_power, share_F_power, share_believe_O)
+  ) %>% 
+  rename(
+  run = "[run number]",
+  step = "[step]"
+)
+
+int3_long <- gather(int3, gender, share_belief, share_believe_M:share_believe_F, factor_key=TRUE) %>% 
+  mutate(gender = ifelse(gender == "share_believe_F", "f", "m"))
+
+
+p1 <- ggplot(int3_long, aes(x = year, y = share_belief, color = gender)) + 
+  geom_point() + 
+  theme_minimal() +
+  xlab("Year") + 
+  ylab("Share of population holding a status belief favoring each gender") +
+  ylim(0,1) +
+  facet_wrap(~ run) + 
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+#ggsave("intervention3.png") 
+# Run number 68 was excluded from further analysis
+
+### Calculating average time point
+int3_sum <- int3 %>% 
+  group_by(run) %>% 
+  filter(share_believe_M < share_believe_F) %>% 
+  filter(
+    run != 68,
+    year > 1961
+  ) %>% select(
+    intervention, run, year
+  )
+
+int3_sum <- int3_sum %>%
+  group_by(run) %>%
+  mutate(
+    MinYear = min(year, na.rm = T)
+  ) %>%
+  arrange(run) %>% 
+  select(-c(year)) %>% 
+  unique
+
+mean(int3_sum$MinYear)
+sd(int3_sum$MinYear)
+
+rm(int3, int3_long, p1)
+```
+
+```{r intervention 4}
+int4 <- df %>% 
+  filter(
+    intervention == "60/40"
+  ) %>% select(
+    -c(Y_start, Y_end, A_i_adult, A_i_max, E_remember, I_M, I_F, model_type, share_M_rich, share_F_rich, share_M_power, share_F_power, share_believe_O)
+  ) %>% 
+  rename(
+  run = "[run number]",
+  step = "[step]"
+)
+
+int4_long <- gather(int4, gender, share_belief, share_believe_M:share_believe_F, factor_key=TRUE) %>% 
+  mutate(gender = ifelse(gender == "share_believe_F", "f", "m"))
+
+
+p1 <- ggplot(int4_long, aes(x = year, y = share_belief, color = gender)) + 
+  geom_point() + 
+  theme_minimal() +
+  xlab("Year") + 
+  ylab("Share of population holding a status belief favoring each gender") +
+  ylim(0,1) +
+  facet_wrap(~ run) + 
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+#ggsave("intervention4.png") 
+# No runs excluded from the data
+
+### Calculating average time point
+int4_sum <- int4 %>% 
+  group_by(run) %>% 
+  filter(share_believe_M < share_believe_F) %>% 
+  filter(
+    year > 1947
+  ) %>% 
+  select(
+    intervention, run, year
+  )
+
+int4_sum <- int4_sum %>%
+  group_by(run) %>%
+  mutate(
+    MinYear = min(year, na.rm = T)
+  ) %>%
+  arrange(run) %>% 
+  select(-c(year)) %>% 
+  unique
+
+mean(int4_sum$MinYear)
+sd(int4_sum$MinYear)
+
+rm(int4, int4_long, p1)
+```
+
+```{r intervention 5}
+int5 <- df %>% 
+  filter(
+    intervention == "70/30"
+  ) %>% select(
+    -c(Y_start, Y_end, A_i_adult, A_i_max, E_remember, I_M, I_F, model_type, share_M_rich, share_F_rich, share_M_power, share_F_power, share_believe_O)
+  ) %>% 
+  rename(
+  run = "[run number]",
+  step = "[step]"
+)
+
+int5_long <- gather(int5, gender, share_belief, share_believe_M:share_believe_F, factor_key=TRUE) %>% 
+  mutate(gender = ifelse(gender == "share_believe_F", "f", "m"))
+
+
+p1 <- ggplot(int5_long, aes(x = year, y = share_belief, color = gender)) + 
+  geom_point() + 
+  theme_minimal() +
+  xlab("Year") + 
+  ylab("Share of population holding a status belief favoring each gender") +
+  ylim(0,1) +
+  facet_wrap(~ run) + 
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+#ggsave("intervention5.png") 
+# Run no. 108 excluded from further analysis
+
+### Calculating average time point
+int5_sum <- int5 %>% 
+  group_by(run) %>% 
+  filter(share_believe_M < share_believe_F) %>% 
+  filter(
+    run != 108, 
+    year > 1942
+  ) %>% 
+  select(
+    intervention, run, year
+  )
+
+int5_sum <- int5_sum %>%
+  group_by(run) %>%
+  mutate(
+    MinYear = min(year, na.rm = T)
+  ) %>%
+  arrange(run) %>% 
+  select(-c(year)) %>% 
+  unique
+
+mean(int5_sum$MinYear)
+sd(int5_sum$MinYear)
+
+rm(int5, int5_long, p1)
+```
+

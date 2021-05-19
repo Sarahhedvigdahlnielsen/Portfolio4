@@ -1,0 +1,54 @@
+---
+title: "Board membership data"
+author: "Sarah Hedvig Dahl Nielsen & Liv Tollånes"
+date: "12/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(tidyverse)
+```
+
+```{r}
+df <- read_csv("membership_dat.csv")
+df2 <- read_csv("population numbers.csv")
+```
+
+```{r}
+df3 <- df %>% filter(
+  Age == "50-59"
+)
+
+df3 <- left_join(df3, df2, by = c("Year", "Gender", "Age")) %>% 
+  mutate(
+    share_board = board_m / poptot
+  )
+```
+
+
+```{r}
+b <- df3 %>% filter(
+  Gender == "b"
+)
+
+mean(b$share_board)
+sd(b$share_board)
+```
+
+```{r}
+f <- df3 %>% filter(
+  Gender == "f"
+)
+
+mean(f$share_board)
+sd(f$share_board)
+```
+```{r}
+m <- df3 %>% filter(
+  Gender == "m"
+)
+
+mean(m$share_board)
+sd(m$share_board)
+```

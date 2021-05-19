@@ -1,0 +1,144 @@
+---
+title: "sc education"
+author: "Sarah Hedvig Dahl Nielsen & Liv Tollånes"
+date: "10/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(tidyverse, ggpubr)
+```
+
+
+```{r loading data}
+# Reconstruction 1970 - 1995
+denmark_rec <- read_csv("proportion by education age sex 1970_1995.csv") %>% 
+  filter(
+    Country == "Denmark"
+  ) %>% 
+  rename(
+    Age = "Age Group"
+    )
+
+# projection based on the GET (global educational trend) scenario
+denmark_get <- read_csv("proportion by education age sex 2000-2050 GET.csv") %>%
+ filter(
+  Country == "Denmark"
+  ) %>% 
+  rename(
+    Age = "Age Group"
+    )
+```
+
+
+```{r}
+rec_30_34 <- denmark_rec %>% filter(
+  Sex != "b" & Age == "30-34"
+) %>% select(
+  -c("Age Code", Age, NoEdu, ISCED0_1, ISCED2_4, poptot)
+)
+
+get_30_34 <- denmark_get %>% filter(
+  Sex != "b" & Age == "30-34"
+) %>% select(
+  -c("Age Code", Age, NoEdu, ISCED0_1, ISCED2_4, poptot)
+)
+
+df2 <- rbind(rec_30_34, get_30_34) %>% 
+  rename(
+    share_ter = ISCED5_6
+  )
+
+rm(denmark_rec, denmark_get)
+
+# Assigning the center year of birth for those aged 30 - 34 in different years
+rec_30_34$Year <- rec_30_34$Year - 32
+get_30_34$Year <- get_30_34$Year - 32
+
+# Making a male and a female dataframe
+rec_f <- rec_30_34 %>% filter(
+  Sex == "f"
+)
+
+rec_m <- rec_30_34 %>% filter(
+  Sex == "m"
+)
+
+get_f <- get_30_34 %>% filter(
+  Sex == "f"
+)
+
+get_m <- get_30_34 %>% filter(
+  Sex == "m"
+)
+
+rm(rec_30_34, get_30_34)
+
+# Binding rows into female and male dataframe
+f <- rbind(rec_f, get_f)
+m <- rbind(rec_m, get_m)
+
+rm(rec_f, get_f, rec_m, get_m)
+```
+
+```{r}
+# Interpolating data
+f.int <- data.frame(approx(f$Year,f$ISCED5_6, xout = 1938:2018, method = "linear"))
+
+m.int <- data.frame(approx(m$Year,m$ISCED5_6, xout = 1938:2018, method = "linear"))
+
+#write.csv(f.int,"female_ed.csv")
+#write.csv(m.int,"male_ed.csv")
+
+rm(f,m)
+```
+
+```{r}
+f.int <- f.int %>% 
+  rename(
+    year = x,
+    prob_ter = y
+  )
+
+f.int$gender <- as.factor(rep("f", 81))
+
+m.int <- m.int %>% 
+  rename(
+    year = x,
+    prob_ter = y
+  )
+
+m.int$gender <- as.factor(rep("m", 81))
+
+df <- rbind(m.int, f.int)
+
+rm(f.int, m.int)
+```
+
+```{r}
+# visualizing educational trend
+p1 <- ggplot(df, aes(x = year, y = prob_ter, color = gender)) +
+  geom_point() + 
+  theme_minimal() +
+  xlab("Year of birth") + 
+  ylab("Probability of obtaining a tertiary degree") +
+  ylim(0,1)
+
+ggsave(plot = p1, width = 3, height = 2, dpi = 300, filename = "prob_ter.png")
+
+df2$Sex <- as.factor(df2$Sex)
+df2 <- df2 %>% 
+  rename(
+    gender = Sex)
+
+p2 <- ggplot(df2, aes(x = Year, y = share_ter, color = gender)) +
+  geom_point() + 
+  theme_minimal() +
+  xlab("Year") + 
+  ylab("Share who have obtained a tertiary degree") +
+  ylim(0,1)
+
+ggsave(plot = p2, width = 3, height = 2, dpi = 300, filename = "share_ter.png")
+```
+
